@@ -1,0 +1,38 @@
+# Virtual environment
+venv/
+.venv/
+
+# Refact files
+.refact/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large ML model files
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.onnx
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment/secrets
+.env
+.streamlit/secrets.toml
+
+# Raw/source datasets
+Car_Dataset/
+*.xlsx
+
+# OS files
+.DS_Store
+Thumbs.db
