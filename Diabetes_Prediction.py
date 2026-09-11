@@ -27,15 +27,16 @@ st.set_page_config(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# Local scaler
-SCALER_PATH = BASE_DIR / "Diabetes_Prediction_Scaler.pkl"
 
 # ============================================================
-# HUGGING FACE MODEL CONFIGURATION
+# HUGGING FACE CONFIGURATION
 # ============================================================
 
 HF_REPO_ID = "Ajmal624/diabetes-prediction-model"
+
 MODEL_FILENAME = "Diabetes_Prediction_Model.pkl"
+
+SCALER_FILENAME = "Diabetes_Prediction_Scaler.pkl"
 
 
 # ============================================================
@@ -55,28 +56,39 @@ def load_model_and_scaler():
     )
 
     # --------------------------------------------------------
+    # Download scaler from Hugging Face
+    # --------------------------------------------------------
+
+    scaler_path = hf_hub_download(
+        repo_id=HF_REPO_ID,
+        filename=SCALER_FILENAME
+    )
+
+    # --------------------------------------------------------
     # Load trained model
     # --------------------------------------------------------
 
-    with open(model_path, "rb") as model_file:
-        model = pickle.load(model_file)
+    with open(
+        model_path,
+        "rb"
+    ) as model_file:
 
-    # --------------------------------------------------------
-    # Check scaler
-    # --------------------------------------------------------
-
-    if not SCALER_PATH.exists():
-
-        raise FileNotFoundError(
-            f"Scaler file not found:\n{SCALER_PATH}"
+        model = pickle.load(
+            model_file
         )
 
     # --------------------------------------------------------
     # Load scaler
     # --------------------------------------------------------
 
-    with open(SCALER_PATH, "rb") as scaler_file:
-        scaler = pickle.load(scaler_file)
+    with open(
+        scaler_path,
+        "rb"
+    ) as scaler_file:
+
+        scaler = pickle.load(
+            scaler_file
+        )
 
     return model, scaler
 
@@ -95,7 +107,9 @@ except Exception as e:
         "Unable to load the trained model or scaler."
     )
 
-    st.code(str(e))
+    st.code(
+        str(e)
+    )
 
     st.stop()
 
@@ -122,6 +136,10 @@ def generate_pdf(
 
     pdf.add_page()
 
+    # --------------------------------------------------------
+    # Title
+    # --------------------------------------------------------
+
     pdf.set_font(
         "Arial",
         "B",
@@ -138,6 +156,10 @@ def generate_pdf(
 
     pdf.ln(8)
 
+    # --------------------------------------------------------
+    # Patient heading
+    # --------------------------------------------------------
+
     pdf.set_font(
         "Arial",
         "B",
@@ -152,6 +174,10 @@ def generate_pdf(
     )
 
     pdf.ln(5)
+
+    # --------------------------------------------------------
+    # Report data
+    # --------------------------------------------------------
 
     report_data = [
 
@@ -212,6 +238,10 @@ def generate_pdf(
 
     ]
 
+    # --------------------------------------------------------
+    # Report content
+    # --------------------------------------------------------
+
     pdf.set_font(
         "Arial",
         size=12
@@ -227,6 +257,10 @@ def generate_pdf(
         )
 
     pdf.ln(8)
+
+    # --------------------------------------------------------
+    # Disclaimer
+    # --------------------------------------------------------
 
     pdf.set_font(
         "Arial",
@@ -244,7 +278,7 @@ def generate_pdf(
     )
 
     # --------------------------------------------------------
-    # Temporary PDF file
+    # Create temporary PDF
     # --------------------------------------------------------
 
     temp_file = tempfile.NamedTemporaryFile(
@@ -258,12 +292,20 @@ def generate_pdf(
         temp_file.name
     )
 
+    # --------------------------------------------------------
+    # Read PDF
+    # --------------------------------------------------------
+
     with open(
         temp_file.name,
         "rb"
     ) as file:
 
         pdf_data = file.read()
+
+    # --------------------------------------------------------
+    # Delete temporary file
+    # --------------------------------------------------------
 
     Path(
         temp_file.name
@@ -292,11 +334,19 @@ def generate_image(
     probability
 ):
 
+    # --------------------------------------------------------
+    # Create figure
+    # --------------------------------------------------------
+
     fig, ax = plt.subplots(
         figsize=(9, 7)
     )
 
     ax.axis("off")
+
+    # --------------------------------------------------------
+    # Report text
+    # --------------------------------------------------------
 
     report = (
 
@@ -326,33 +376,64 @@ def generate_image(
 
     )
 
-    ax.text(
-        0.5,
-        0.90,
-        report,
-        fontsize=13,
-        ha="center",
-        va="top",
-        linespacing=1.6
-    )
+    # --------------------------------------------------------
+    # Main report text
+    # --------------------------------------------------------
 
     ax.text(
+
         0.5,
+
+        0.90,
+
+        report,
+
+        fontsize=13,
+
+        ha="center",
+
+        va="top",
+
+        linespacing=1.6
+
+    )
+
+    # --------------------------------------------------------
+    # Disclaimer
+    # --------------------------------------------------------
+
+    ax.text(
+
+        0.5,
+
         0.08,
+
         "This prediction is not a medical diagnosis.",
+
         fontsize=10,
+
         ha="center"
+
     )
 
     plt.tight_layout()
 
+    # --------------------------------------------------------
+    # Save image to memory
+    # --------------------------------------------------------
+
     img_buffer = io.BytesIO()
 
     plt.savefig(
+
         img_buffer,
+
         format="png",
+
         dpi=150,
+
         bbox_inches="tight"
+
     )
 
     plt.close(fig)
@@ -363,7 +444,7 @@ def generate_image(
 
 
 # ============================================================
-# APPLICATION
+# MAIN APPLICATION
 # ============================================================
 
 def main():
@@ -394,59 +475,80 @@ def main():
     )
 
 
+    # ========================================================
+    # TWO COLUMNS
+    # ========================================================
+
     col1, col2 = st.columns(2)
 
 
     # ========================================================
-    # COLUMN 1
+    # LEFT COLUMN
     # ========================================================
 
     with col1:
 
         gender = st.selectbox(
+
             "Gender",
+
             [
                 "Female",
                 "Male"
             ]
+
         )
 
 
         age = st.number_input(
+
             "Age",
+
             min_value=1,
+
             max_value=120,
+
             value=30,
+
             step=1
+
         )
 
 
         hypertension = st.selectbox(
+
             "Hypertension",
+
             [
                 "No",
                 "Yes"
             ]
+
         )
 
 
         heart_disease = st.selectbox(
+
             "Heart Disease",
+
             [
                 "No",
                 "Yes"
             ]
+
         )
 
 
     # ========================================================
-    # COLUMN 2
+    # RIGHT COLUMN
     # ========================================================
 
     with col2:
 
         smoking_history = st.selectbox(
+
             "Smoking History",
+
             [
                 "never",
                 "current",
@@ -455,33 +557,52 @@ def main():
                 "ever",
                 "not current"
             ]
+
         )
 
 
         bmi = st.number_input(
+
             "BMI",
+
             min_value=10.0,
+
             max_value=100.0,
+
             value=25.0,
+
             step=0.1
+
         )
 
 
         hba1c = st.number_input(
+
             "HbA1c Level",
+
             min_value=3.0,
+
             max_value=15.0,
+
             value=5.5,
+
             step=0.1
+
         )
 
 
         glucose = st.number_input(
+
             "Blood Glucose Level",
+
             min_value=40,
+
             max_value=500,
+
             value=140,
+
             step=1
+
         )
 
 
@@ -493,14 +614,18 @@ def main():
     # ========================================================
 
     if st.button(
+
         "🔍 Predict Diabetes",
+
         type="primary",
+
         use_container_width=True
+
     ):
 
-        # ----------------------------------------------------
-        # Validate patient name
-        # ----------------------------------------------------
+        # ====================================================
+        # VALIDATE NAME
+        # ====================================================
 
         if not name.strip():
 
@@ -554,7 +679,9 @@ def main():
         hypertension_numeric = (
 
             1
+
             if hypertension == "Yes"
+
             else 0
 
         )
@@ -563,7 +690,9 @@ def main():
         heart_disease_numeric = (
 
             1
+
             if heart_disease == "Yes"
+
             else 0
 
         )
@@ -622,18 +751,46 @@ def main():
         # SCALE FEATURES
         # ====================================================
 
-        scaled_features = scaler.transform(
-            feature_data
-        )
+        try:
+
+            scaled_features = scaler.transform(
+                feature_data
+            )
+
+        except Exception as e:
+
+            st.error(
+                "Error while scaling the input data."
+            )
+
+            st.code(
+                str(e)
+            )
+
+            st.stop()
 
 
         # ====================================================
         # PREDICTION
         # ====================================================
 
-        prediction = model.predict(
-            scaled_features
-        )[0]
+        try:
+
+            prediction = model.predict(
+                scaled_features
+            )[0]
+
+        except Exception as e:
+
+            st.error(
+                "Error while making the prediction."
+            )
+
+            st.code(
+                str(e)
+            )
+
+            st.stop()
 
 
         # ====================================================
@@ -645,22 +802,38 @@ def main():
             "predict_proba"
         ):
 
-            probability = (
+            try:
 
-                model.predict_proba(
-                    scaled_features
-                )[0][1]
+                probability = (
 
-                * 100
+                    model.predict_proba(
+                        scaled_features
+                    )[0][1]
 
-            )
+                    * 100
+
+                )
+
+            except Exception:
+
+                probability = (
+
+                    100.0
+
+                    if prediction == 1
+
+                    else 0.0
+
+                )
 
         else:
 
             probability = (
 
                 100.0
+
                 if prediction == 1
+
                 else 0.0
 
             )
@@ -673,14 +846,16 @@ def main():
         result = (
 
             "Diabetic"
+
             if prediction == 1
+
             else "Non-Diabetic"
 
         )
 
 
         # ====================================================
-        # DISPLAY MEDICAL REPORT
+        # MEDICAL REPORT
         # ====================================================
 
         st.subheader(
@@ -725,8 +900,10 @@ def main():
         with report_col2:
 
             st.write(
+
                 f"**Smoking History:** "
                 f"{smoking_history}"
+
             )
 
             st.write(
@@ -746,7 +923,7 @@ def main():
 
 
         # ====================================================
-        # DISPLAY RESULT
+        # RESULT DISPLAY
         # ====================================================
 
         if result == "Diabetic":
@@ -788,65 +965,93 @@ def main():
 
 
         # ====================================================
-        # GENERATE PDF REPORT
+        # GENERATE PDF
         # ====================================================
 
-        pdf_data = generate_pdf(
+        try:
 
-            name,
+            pdf_data = generate_pdf(
 
-            gender,
+                name,
 
-            age,
+                gender,
 
-            hypertension,
+                age,
 
-            heart_disease,
+                hypertension,
 
-            smoking_history,
+                heart_disease,
 
-            bmi,
+                smoking_history,
 
-            hba1c,
+                bmi,
 
-            glucose,
+                hba1c,
 
-            result,
+                glucose,
 
-            probability
+                result,
 
-        )
+                probability
+
+            )
+
+        except Exception as e:
+
+            st.error(
+                "Unable to generate the PDF report."
+            )
+
+            st.code(
+                str(e)
+            )
+
+            pdf_data = None
 
 
         # ====================================================
-        # GENERATE IMAGE REPORT
+        # GENERATE IMAGE
         # ====================================================
 
-        image_data = generate_image(
+        try:
 
-            name,
+            image_data = generate_image(
 
-            gender,
+                name,
 
-            age,
+                gender,
 
-            hypertension,
+                age,
 
-            heart_disease,
+                hypertension,
 
-            smoking_history,
+                heart_disease,
 
-            bmi,
+                smoking_history,
 
-            hba1c,
+                bmi,
 
-            glucose,
+                hba1c,
 
-            result,
+                glucose,
 
-            probability
+                result,
 
-        )
+                probability
+
+            )
+
+        except Exception as e:
+
+            st.error(
+                "Unable to generate the image report."
+            )
+
+            st.code(
+                str(e)
+            )
+
+            image_data = None
 
 
         # ====================================================
@@ -869,21 +1074,23 @@ def main():
 
         with download_col1:
 
-            st.download_button(
+            if pdf_data is not None:
 
-                label="📄 Download PDF",
+                st.download_button(
 
-                data=pdf_data,
+                    label="📄 Download PDF",
 
-                file_name=(
-                    "Diabetes_Medical_Report.pdf"
-                ),
+                    data=pdf_data,
 
-                mime="application/pdf",
+                    file_name=(
+                        "Diabetes_Medical_Report.pdf"
+                    ),
 
-                use_container_width=True
+                    mime="application/pdf",
 
-            )
+                    use_container_width=True
+
+                )
 
 
         # ====================================================
@@ -892,21 +1099,23 @@ def main():
 
         with download_col2:
 
-            st.download_button(
+            if image_data is not None:
 
-                label="🖼️ Download PNG",
+                st.download_button(
 
-                data=image_data,
+                    label="🖼️ Download PNG",
 
-                file_name=(
-                    "Diabetes_Medical_Report.png"
-                ),
+                    data=image_data,
 
-                mime="image/png",
+                    file_name=(
+                        "Diabetes_Medical_Report.png"
+                    ),
 
-                use_container_width=True
+                    mime="image/png",
 
-            )
+                    use_container_width=True
+
+                )
 
 
     # ========================================================
