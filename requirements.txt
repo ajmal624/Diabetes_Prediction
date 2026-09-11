@@ -6,3 +6,4 @@ imbalanced-learn
 matplotlib
 seaborn
 fpdf2
+huggingface_hub
